@@ -2,3 +2,5 @@ This is Reeha & Afomia's repository for the 2025 STEMPOWER HER Hackathon. We are
 
 Start date: 12/22/2025
 End Date: 
+
+to activate venv for reeha: .\.venv\Scripts\Activate.ps1
