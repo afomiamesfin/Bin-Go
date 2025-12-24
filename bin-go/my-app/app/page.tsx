@@ -3,6 +3,7 @@
 //imports for components
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   Card,
@@ -15,109 +16,71 @@ import {
 } from "@/components/ui/card"
 
 import { Textarea } from "@/components/ui/textarea"
+import { userAgent } from "next/server";
 
 export default function Home() {
-  // has user chosen their input method?
-  const [hasChosenMethod, setHasChosenMethod] = useState<boolean>(false);
-  // state management: is user using cam or text input?
-  const [inputMode, setInputMode] = useState<"camera" | "text">("camera");
-  // store image as URL string or null
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  // store text description from user
-  const [textInput, setTextInput] = useState<string>("");
-  // track camera / recognition errors
-  const[error, setError] = useState<string | null>(null);
-  // track if we are analyzing imge rn
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const router = useRouter();
 
   // HANDLE METHOD SELECTION
-  // when user clicks camera or describe on welcome screen
-  const handleMethodSelection = (mode: "camera" | "text") => {
-    setInputMode(mode); // set input mode
-    setHasChosenMethod(true); // mark that user has chosen method
+  // 1. user clicks card. 2. user navigates to input page 
+  const handleMethodChoice = (method: "camera" | "text") => {
+    // pass chosen method as URL to input page
+    router.push(`/input?method=${method}`);
   }
 
-  // HANDLE IMAGE CAPTURE
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null); // clear previous errors
-    const file = e.target.files?.[0]; // grab first file from input
-
-    if(file){
-      const imageUrl = URL.createObjectURL(file); // create temporary URL for image
-      setCapturedImage(imageUrl); // store image URL in state
-    } else { // womp womp
-      setError("Oops, failed to capture image. Please try again, or describe the item below!!");
-      setInputMode("text"); // switch to text as fallback
-    }
-  }
-
-
-  // HANDLE IMAGE ANALYSIS
-  // --> Placeholder function calling ML API - include error handling!!
-  const handleAnalyzeImage = async () => {
-    if(!capturedImage) return; // sanity check
-
-    setIsAnalyzing(true); 
-    setError(null);
-
-    try{
-      // TODO: replace w/ actual Google Vision API call
-      // simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      // simulate recognition failure (NEED TO REMOVE LATER)
-      const simulateError = Math.random() < 0.7; // 30% chance of "failure"
-
-      if(simulateError){
-        throw new Error("Recognition failed!");
-      
-
-      // todo: if successful, navigate to results page w/ recognized item
-      console.log("Image recognized successfully!");
-
-      } 
-    } catch(err){
-      // recognition has failed
-      setError("Sorry, we couldn't recognize that item. Please try again or describe the item below!");
-      setInputMode("text"); // switch to text input as fallback
-      setCapturedImage(null); // clear captured image
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }
-
-  //ui, trashcans + buttons 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col px-32 py-50 items-center justify-between bg-white dark:bg-black sm:items-start">
-
-        <Textarea placeholder="type here pibble." className="bg-black text-white" />
+  return ( // main container
+    // just setting up a full screen w/ centered content & light background 
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
+      <main className="flex flex-col items-center px-6 py-12 max-w-2xl w-full">
         
-        <div className="w-full grid grid-cols-3 gap-x-50 justify-items-center items-start py-8">
-        <Card className="w-48 h-72 bg-blue-500">
-          <CardHeader>
-            <CardTitle>recycling</CardTitle>
-            {/* <CardDescription>Card Description</CardDescription> */}
-          </CardHeader>
-          {/* <CardContent>
-            <p>Card Contenttttttttttttttttttttttt</p>
-          </CardContent>
-          <CardFooter>
-            <p>Card Footer</p>
-          </CardFooter> */}
-        </Card>
-         <Card className="w-48 h-72 bg-gray-500">
-          <CardHeader>
-            <CardTitle>trash</CardTitle>
-          </CardHeader>
-       
-        </Card>
-         <Card className="w-48 h-72 bg-green-500">
-          <CardHeader>
-            <CardTitle>compost</CardTitle>
-          </CardHeader>
-        
-        </Card>
+        {/* header / welcoem message */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <h1 className="text-4xl font-bold text-emerald-700">welcome to Bin-Go!! ⋆˚꩜｡</h1>
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8">
+          how would you like to show us your item?
+          </h2>
         </div>
+
+        {/* users select method w/ 2 large clickable cards*/}
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* camera card! */}
+          <Card 
+            onClick={() => handleMethodChoice("camera")}
+            className="cursor-pointer hover:shadow-xl hover:border-emerald-400 transition-all border-2 border-emerald-200"
+          >
+            <CardHeader className="text-center p-8">
+              <div className="text-6xl mb-4">📸</div>
+              <CardTitle className="text-xl mb-2">photograph my item</CardTitle>
+              <CardDescription className="text-base">
+                snap a picture of your item, and we will identify it & where it belongs
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          {/* text card! */}
+          <Card 
+            onClick={() => handleMethodChoice("text")}
+            className="cursor-pointer hover:shadow-xl hover:border-emerald-400 transition-all border-2 border-emerald-200"
+          >
+            <CardHeader className="text-center p-8">
+              <div className="text-6xl mb-4">✍️</div>
+              <CardTitle className="text-xl mb-2">describe my item</CardTitle>
+              <CardDescription className="text-base">
+                type a summary of your item, and we will identify where it belongs!
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+        </div>
+
+        {/* footer / quick tip */}
+        <div className="mt-12 text-center text-sm text-gray-500">
+          <p>💡 note: photo recognition works best when picture is taken in clear lighting</p>
+        </div>
+
       </main>
     </div>
   );
