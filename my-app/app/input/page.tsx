@@ -67,7 +67,7 @@ export default function InputPage() {
       // here, we need logic w/ ai to determine bin
       // but for demo this is some random logic to choose a bin again
         const bins = ["recycling", "trash", "compost"];
-        const randomBin = bins[Math.floor(Math.random() * bins.length)];
+        const randomBin = bins[2];
       
         // now move us to the results page
         router.push(`/results?bin=${randomBin}&hasImage=true`);
@@ -85,7 +85,7 @@ export default function InputPage() {
         
         {/* header / prompt */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-emerald-700 mb-2">Bin-Go</h1>
+          <h1 className="text-3xl font-bold text-emerald-700 mb-2">Bin-Go ⋆˚꩜｡</h1>
           <p className="text-gray-600">
             {method === "camera" ? "snap a picture of your item!!" : "please describe your item!!"}
           </p>

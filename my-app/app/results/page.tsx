@@ -32,7 +32,7 @@ export default function ResultsPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
       <main className="flex flex-col items-center px-6 py-12 max-w-4xl w-full">
         
-        <h1 className="text-3xl font-bold text-emerald-700 mb-12">Bin-Go</h1>
+        <h1 className="text-3xl font-bold text-emerald-700 mb-12">Bin-Go ⋆˚꩜｡</h1>
 
         {/* loading? they got some cool animations!! */}
         {isAnimating && (
@@ -84,6 +84,14 @@ export default function ResultsPage() {
               </button>
             </CardContent>
           </Card>
+        )}
+
+        {!isAnimating && binCategory === "compost" && (
+        <button
+        onClick={() => router.push("/donate")}
+        className="mt-4 w-full max-w-md py-3 bg-amber-500 text-white rounded-full font-medium hover:bg-amber-600">
+            🍽️ donate my food instead!!
+        </button>
         )}
 
       </main>
