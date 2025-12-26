@@ -59,19 +59,36 @@ export default function InputPage() {
 
   // process text & return bin
   const handleAnalyzeText = async () => {
-
     setIsAnalyzing(true);
     setError(null);
 
     try {
-      // here, we need logic w/ ai to determine bin
-      // but for demo this is some random logic to choose a bin again
-        const bins = ["recycling", "trash", "compost"];
-        const randomBin = bins[2];
-      
-        // now move us to the results page
-        router.push(`/results?bin=${randomBin}&hasImage=true`);
-      
+      console.log("analyzing text:", textInput);
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textInput }),
+      });
+
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch (e) {
+        // non-json response
+      }
+
+      if (!res.ok) {
+        const msg = (data && data.detail) || `analysis request failed (status ${res.status})`;
+        console.error(msg);
+        setError(msg);
+        return;
+      }
+
+      const bin = data?.bin || "trash";
+      console.log("analysis result:", bin, data);
+
+      router.push(`/results?bin=${bin}&hasImage=false`);
+
     } catch (err) {
       setError("yikes... something went wrong, try again please!!");
     } finally {
@@ -182,7 +199,10 @@ export default function InputPage() {
                   placeholder="e.g., plastic water bottle, pizza box, banana peel..."
                   className="resize-none h-32 mb-4"
                 />
-                
+                {error ? (
+                  <p className="text-sm text-red-600 mb-3">{error}</p>
+                ) : null}
+
                 <button
                   onClick={handleAnalyzeText}
                   disabled={!textInput.trim() || isAnalyzing}
