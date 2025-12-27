@@ -35,25 +35,22 @@ export default function InputPage() {
   };
 
   // ========== ROBOFLOW CLASSIFICATION ==========
-  // Classification models return ONE category for the entire image
   const classifyImageWithRoboflow = async (imageFile: File): Promise<string> => {
-    console.log("🔥 NEW CLASSIFIER RUNNING 🔥");
 
     try {
-      // Convert image file to base64
+      // convert image file to base64
       const base64Image = await new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const result = reader.result as string;
-          // Remove the "data:image/jpeg;base64," prefix
+          // remove the "data:image/jpeg;base64," prefix
           const base64 = result.split(',')[1];
           resolve(base64);
         };
         reader.readAsDataURL(imageFile);
       });
 
-      // Call Roboflow Classification API
-      // Note: Using "serverless.roboflow.com" (from the docs) not "detect.roboflow.com"
+      // call roboflow classification api
       const response = await fetch(
         `https://serverless.roboflow.com/trash-recycle-compost-etc-etc/1?api_key=${process.env.NEXT_PUBLIC_ROBOFLOW_API_KEY}`,
         {
