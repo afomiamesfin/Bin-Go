@@ -37,6 +37,8 @@ export default function InputPage() {
   // ========== ROBOFLOW CLASSIFICATION ==========
   // Classification models return ONE category for the entire image
   const classifyImageWithRoboflow = async (imageFile: File): Promise<string> => {
+    console.log("🔥 NEW CLASSIFIER RUNNING 🔥");
+
     try {
       // Convert image file to base64
       const base64Image = await new Promise<string>((resolve) => {
@@ -65,32 +67,29 @@ export default function InputPage() {
 
       const data = await response.json();
       
-      // Debug: see what the model returns
+      // debug: see what the model returns
       console.log("Roboflow response:", data);
-      
-      // classification models return: { predicted_classes: ["category"], confidence: {...} }
-      if (data.predicted_classes && data.predicted_classes.length > 0) {
-        const predictedClass = data.predicted_classes[0].toLowerCase();
-        
-        console.log("Predicted class:", predictedClass);
-        
-        // validate what the model returns...
-        if (["recycling", "trash", "compost"].includes(predictedClass)) {
-          return predictedClass;
-        }
-        
-        // if it returns something unexpected, try to map it
-        if (predictedClass.includes("recycle")) return "recycling";
-        if (predictedClass.includes("compost")) return "compost";
-        
-        // default to trash
+      const predictedClass = data.top?.toLowerCase();
+
+      if (!predictedClass) {
+        console.log("No top class from Roboflow");
         return "trash";
       }
-      
-      // no prediction? Default to trash
-      console.log("No prediction from Roboflow");
+
+      console.log("Predicted class from Roboflow:", predictedClass);
+
+      // 🎯 Map Roboflow labels → bins
+      if (["plastic", "cardboard", "paper", "metal", "glass"].includes(predictedClass)) {
+        return "recycling";
+      }
+
+      if (["banana", "food", "organic", "compost"].includes(predictedClass)) {
+        return "compost";
+      }
+
+      // fallback
       return "trash";
-      
+
     } catch (error) {
       console.error("Roboflow error:", error);
       return "trash";
