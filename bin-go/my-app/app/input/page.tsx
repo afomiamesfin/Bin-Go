@@ -12,7 +12,6 @@ export default function InputPage() {
   // get camera or text method from input parameters
   const method = searchParams.get("method") as "camera" | "text";
 
-  // uhhh managing stages ig?
   const [capturedImage, setCapturedImage] = useState<string | null>(null); // stores the url of the pic
   const [textInput, setTextInput] = useState<string>(""); // stores the text description (if chosen as option)
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false); // when we are loading state
@@ -206,7 +205,6 @@ export default function InputPage() {
                     <span className="text-3xl text-white">go!</span>
                   </label>
                   
-                  {/* triggers camera or prompts files?? ts came from chatgpt idk how bro works... */} 
                   <input
                     type="file"
                     id="camera-input"
