@@ -1,2 +1,46 @@
+# python stuff
 .venv*
 __pycache__/
+
+# node js dependencies!!!! --> prevents 10k files from being tracked
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# environment variables for security
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# testing
+coverage/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+.vscode/
+.idea/
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# typescript functions
+*.tsbuildinfo
+next-env.d.ts
+
+# vercel dev
+.vercel

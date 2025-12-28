@@ -17,40 +17,98 @@ export default function InputPage() {
   const [textInput, setTextInput] = useState<string>(""); // stores the text description (if chosen as option)
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false); // when we are loading state
   const [error, setError] = useState<string | null>(null); // whoopsie something went wrong
+  const [imageFile, setImageFile] = useState<File | null>(null); // store image file, not just URL
 
 
-  // current image scenario: user selects or takes pic from their device
+// store both URL (for display) and file (for Roboflow API)
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null); // clear buildup errors
     const file = e.target.files?.[0]; // grab the file
 
     if (file) {
       const imageUrl = URL.createObjectURL(file); // create url from preview
-      setCapturedImage(imageUrl); // store the darn image
+      setCapturedImage(imageUrl); // store for display
+      setImageFile(file); // store file for Roboflow API
     } else {
       setError("oopsie... image capture failed, please try inputing an item description instead!");
     }
   };
 
-  // fancy ai ml api stuff goes here... what the sigma did they submit as a photo bro
-  // this john needs to return a bin category
-  const handleAnalyzeImage = async () => {
-    if (!capturedImage) return; // safety feature
+  // ========== ROBOFLOW CLASSIFICATION ==========
+  const classifyImageWithRoboflow = async (imageFile: File): Promise<string> => {
 
-    setIsAnalyzing(true); // show that we are loading (hold your horses guys)
+    try {
+      // convert image file to base64
+      const base64Image = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          // remove the "data:image/jpeg;base64," prefix
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(imageFile);
+      });
+
+      // call roboflow classification api
+      const response = await fetch(
+        `https://serverless.roboflow.com/trash-recycle-compost-etc-etc/1?api_key=${process.env.NEXT_PUBLIC_ROBOFLOW_API_KEY}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: base64Image
+        }
+      );
+
+      const data = await response.json();
+      
+      // debug: see what the model returns
+      console.log("Roboflow response:", data);
+      const predictedClass = data.top?.toLowerCase();
+
+      if (!predictedClass) {
+        console.log("No top class from Roboflow");
+        return "trash";
+      }
+
+      console.log("Predicted class from Roboflow:", predictedClass);
+
+      // 🎯 Map Roboflow labels → bins
+      if (["plastic", "cardboard", "paper", "metal", "glass"].includes(predictedClass)) {
+        return "recycling";
+      }
+
+      if (["banana", "food", "organic", "compost"].includes(predictedClass)) {
+        return "compost";
+      }
+
+      // fallback
+      return "trash";
+
+    } catch (error) {
+      console.error("Roboflow error:", error);
+      return "trash";
+    }
+  };
+
+  // analyze the captured image with Roboflow AI
+  const handleAnalyzeImage = async () => {
+    if (!capturedImage || !imageFile) return; // safety check
+
+    setIsAnalyzing(true); // show loading
     setError(null);
 
     try {
-      // TODO: replace w/ actual google vision shi
-      // for demo, just randomly pick a bin
-      const bins = ["recycling", "trash", "compost"];
-      const randomBin = bins[Math.floor(Math.random() * bins.length)];
+      // call Roboflow to classify the image
+      const binCategory = await classifyImageWithRoboflow(imageFile);
       
-      // now move us to the results page
-      router.push(`/results?bin=${randomBin}&hasImage=true`);
+      // navigate to results page with AI's decision
+      router.push(`/results?bin=${binCategory}&hasImage=true`);
       
     } catch (err) {
-      // didn't recognize the pic? try something else brah
+      // something goes wrong, suggest text input
       setError("aw man, we couldn't identify your item ('𐃷') try describing it instead!!");
     } finally {
       setIsAnalyzing(false);
@@ -115,6 +173,13 @@ export default function InputPage() {
         >
           ← change input 
         </button>
+
+        {/* show error message if something goes wrong */}
+        {error && (
+          <div className="w-full mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-2xl">
+            <p className="text-sm text-red-800">⚠️ {error}</p>
+          </div>
+        )}
 
         {/* CONDITIONALS: depends on if they chose cam or text input */}
         <div className="w-full">

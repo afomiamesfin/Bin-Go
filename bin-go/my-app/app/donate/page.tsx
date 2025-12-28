@@ -28,36 +28,61 @@ export default function DonatePage() {
     );
   };
 
-  const searchDonationSites = async (location: {lat: number, lng: number}) => { // lets find some sites
-    setIsLoadingSites(true);
+// Uses OpenStreetMap's public Nominatim API to find nearby food donation centers
+const searchDonationSites = async (location: { lat: number; lng: number }) => {
+  setIsLoadingSites(true); 
+  setLocationError(null);  
 
-    try {
-      // TODO: replace with actual google maps api call
+  // we use browser's built-in geolocation API to get position
+  // then query OpenStreetMap's public database for nearby food banks
+  // for directions, we link into Google Maps using the provided coordinates
 
-      const mockSites = [
-        {
-          name: "Community Food Bank",
-          address: "123 Main St, Minneapolis, MN",
-          distance: "0.5 miles",
-          lat: location.lat + 0.01,
-          lng: location.lng + 0.01
-        }
-      ];
+  try {
+    // search URL w/ user's latitude & longitude
+    // "food bank" is the keyword — OpenStreetMap handles proximity automatically
+    const query = `
+      https://nominatim.openstreetmap.org/search
+      ?q=food+bank
+      &format=json
+      &limit=5
+      &lat=${location.lat}
+      &lon=${location.lng}
+    `.replace(/\s+/g, ""); 
 
-      setDonationSites(mockSites);
-    } catch (error) {
-      setLocationError("oh no! we couldn't find donation sites nearby. please try again, or give text input!");
-    } finally {
-      setIsLoadingSites(false);
-    }
-  };
+    // make request to OpenStreetMap
+    const res = await fetch(query, {
+      headers: {
+        "Accept": "application/json"
+      }
+    });
 
-  // OPEN IN GOOGLE MAPS
-  const openInMaps = (site: any) => {
-    // opens Google Maps with directions to the site
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`;
-    window.open(mapsUrl, '_blank');
-  };
+    //convert API response into app-friendly format
+    const data = await res.json();
+    const sites = data.map((place: any) => ({
+      name: place.display_name.split(",")[0],
+      address: place.display_name,
+      // coordinates used later for Google Maps directions
+      lat: parseFloat(place.lat),
+      lng: parseFloat(place.lon),
+      // simple distance functionality
+      distance: "nearby"
+    }));
+
+    setDonationSites(sites);
+
+  } catch (err) {
+    setLocationError("couldn't find food donation centers nearby 💔");
+  } finally {
+    setIsLoadingSites(false); 
+  }
+};
+
+
+// Opens Google Maps in a new tab with directions to the selected donation site
+const openInMaps = (site: any) => {
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${site.lat},${site.lng}`;
+  window.open(mapsUrl, "_blank");
+};
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
